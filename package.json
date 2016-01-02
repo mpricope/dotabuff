@@ -1,0 +1,12 @@
+{
+  "name": "dotabuff",
+  "version": "0.0.1",
+  "dependencies": {
+    "cheerio": "^0.19.0",
+    "fs": "",
+    "node.extend": "^1.1.5",
+    "q": "1.0.1",
+    "q-io": "1.13.1",
+    "rangy": "1.3.0"
+  }
+}
