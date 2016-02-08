@@ -40,7 +40,7 @@ function getHeroes() {
 
 function getHeroStats(hero) {
   var reqObj = {
-    url: 'http://www.dotabuff.com/heroes/' + hero + '/matchups?date=patch_6.86c',
+    url: 'http://www.dotabuff.com/heroes/' + hero + '/matchups?date=patch_6.86d',
     method: 'GET',
     headers: {
       'Cookie': 'OX_plg=swf|wmp|shk|pm; __gads=ID=1a23941719173056:T=1423295676:S=ALNI_Mb6ef5FISBEXQMQbzolK2yjT4EDUA; __qca=P0-1161482836-1423295679715; _player_token=42593d05dd7dce124a85b852e722be32b43fcd4bffb232e9f63856e49ba750de; _tz=Europe%2FBerlin; _s=NnFCV0VOY1J2UWFwd0xiUnluWDI0Y0Y5TE53NG9mTVBvdHpkSmMrNzd4d3JIWjRLb3dvVGozTE5nZEFYeVRiRWN4SnF0UnJTMEpYT29sM2pKTERwSlB0Zy9KclhEVHVQRVhhczVyS2hvL1BHMjgvNmdZSXNnc1RnSVVEVVJGMlB6djRPNmFPUktWbjVOR09TalYzZHd3NVRvcTJDYnkwVGpjTmNEWDloU3NNN3o3OU8zZ1MxYUo4bXNGNTRTV0lvLS1GRWxnRWo1YjRBL1dEaER2YU5wKzlBPT0%3D--8ebf809a48f991f8a5e551d011661e7adfbfd47e; __utma=242922391.284722289.1423295675.1441783045.1441791130.469; __utmb=242922391.2.10.1441791130; __utmc=242922391; __utmz=242922391.1437934609.331.3.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided)',
@@ -54,8 +54,11 @@ function getHeroStats(hero) {
       $1("section").find('tr[data-link-to*="/heroes"]').each(function (i, el) {
         //heroes.push(el);
         var score = el.children[2].attribs['data-value'];
+        var percent = el.children[3].attribs['data-value'];
+        //percent = percent * 2 / 100;
+        //score = score * percent;
         var opHero = el.attribs['data-link-to'].split('/')[2];
-        heroes[opHero] = score;
+        heroes[opHero] = {score:score,percent:percent};
       });
       return heroes;
     });
@@ -108,17 +111,30 @@ function getAllHeroStats(heroes) {
 }
 
 
+function cost(a,b) {
+
+  //var r = parseFloat(a.score) *  Math.pow(parseFloat(b.percent)/50,3);
+  var r = parseFloat(a.score) +  (50 - parseFloat(b.percent))/3;
+  //console.log(a.score, a.percent, parseFloat(a.percent)/50, r);
+  return r;
+}
 
 function mergeStats(stats, selectedHeroes) {
   var merged = {};
   var iHero = selectedHeroes.shift();
   merged = stats[iHero];
+  for (var k in merged) {
+    merged[k].cost = cost(stats[iHero][k],stats[k][iHero]);
+  }
+
   selectedHeroes.forEach(function (hero) {
 
     //console.log(hero);
     delete merged[hero];
     for (var k in merged) {
-      merged[k] = parseFloat(merged[k]) + parseFloat(stats[hero][k]);
+      //var s = stats[hero][k];
+      //var add = s.score * (s.percent ^ 3);
+      merged[k].cost += cost(stats[hero][k],stats[k][hero]);//parseFloat(merged[k]) + add;//parseFloat(stats[hero][k]);
     }
   });
 
@@ -133,10 +149,13 @@ function displayTop(stats, top) {
   }
 
   arr.sort(function (a, b) {
-    return a.stat - b.stat;
+    return a.stat.cost - b.stat.cost;
   });
 
-  console.log(arr.slice(0, top));
+  arr.slice(0,top).forEach(function (h) {
+    console.log(h.hero, h.stat.cost);
+  });
+  //console.log(arr.slice(0, top));
 }
 
 
